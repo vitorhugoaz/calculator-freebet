@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Freebet</title>
+    <title>Calculadora de Freebet/Surebet</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -11,6 +11,7 @@
             --secondary: #006400;
             --success: #00A000;
             --danger: #F87171;
+            --warning: #f39c12;
             --light: #f8f9fa;
             --dark: #1F2937;
             --darker: #111827;
@@ -70,32 +71,44 @@
             padding: 1.5rem;
         }
         
-        .tabs {
+        .mode-switch {
             display: flex;
+            background: #374151;
+            border-radius: var(--border-radius);
+            padding: 5px;
             margin-bottom: 1.5rem;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: calc(var(--border-radius) - 5px);
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
             border-bottom: 1px solid #374151;
         }
         
-        .tab {
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: var(--transition);
-            font-weight: 500;
-            color: var(--light);
-        }
-        
-        .tab.active {
-            border-bottom: 3px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
+        th {
+            background: #1a202c;
+            font-weight: 600;
         }
         
         .input-group {
@@ -124,10 +137,10 @@
         
         .input-wrapper input, .input-wrapper select {
             width: 100%;
-            padding: 12px 12px 12px 40px;
+            padding: 10px 10px 10px 35px;
             border: 1px solid #374151;
             border-radius: var(--border-radius);
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: var(--transition);
             background-color: #1F2937;
             color: var(--light);
@@ -143,7 +156,7 @@
             background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: var(--border-radius);
             font-size: 1rem;
             font-weight: 600;
@@ -160,6 +173,37 @@
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 128, 0, 0.3);
+        }
+        
+        .settings {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1F2937;
+            border-radius: var(--border-radius);
+        }
+        
+        .settings h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .settings-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .settings-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        .settings-item select {
+            margin-left: 10px;
+            padding: 5px;
+            border-radius: var(--border-radius);
+            border: 1px solid #374151;
+            background: #1F2937;
+            color: var(--light);
         }
         
         .results {
@@ -240,6 +284,14 @@
             gap: 10px;
         }
         
+        .commission-column {
+            transition: var(--transition);
+        }
+        
+        .hide-commission .commission-column {
+            display: none;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -258,38 +310,13 @@
                 font-size: 1.5rem;
             }
             
-            .tabs {
-                overflow-x: auto;
-                padding-bottom: 5px;
+            table {
+                font-size: 14px;
             }
             
-            .tab {
-                padding: 0.5rem 1rem;
-                white-space: nowrap;
+            th, td {
+                padding: 8px;
             }
-        }
-        
-        /* Dark mode toggle */
-        .dark-mode-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            z-index: 100;
-            transition: var(--transition);
-        }
-        
-        .dark-mode-toggle:hover {
-            transform: scale(1.1);
         }
     </style>
 </head>
@@ -297,17 +324,26 @@
     <div class="container">
         <div class="calculator">
             <div class="calculator-header">
-                <h2><i class="fas fa-calculator"></i> Calculadora de Freebet</h2>
-                <p>Converta sua freebet</p>
+                <h2><i class="fas fa-calculator"></i> Calculadora de Apostas</h2>
+                <p>Freebet e Surebet com múltiplas odds</p>
             </div>
             
             <div class="calculator-body">
-                <div class="tab-content active" id="freebet-tab">
+                <div class="mode-switch">
+                    <div class="mode-btn active" data-mode="freebet">
+                        <i class="fas fa-gift"></i> Freebet
+                    </div>
+                    <div class="mode-btn" data-mode="surebet">
+                        <i class="fas fa-shield-alt"></i> Surebet
+                    </div>
+                </div>
+                
+                <div id="freebet-tab">
                     <div class="input-group">
                         <label for="freebet-amount">Valor da Freebet (R$)</label>
                         <div class="input-wrapper">
                             <span>R$</span>
-                            <input type="number" id="freebet-amount" placeholder="Ex: 100" value="100">
+                            <input type="number" id="freebet-amount" placeholder="Ex: 100" value="0">
                         </div>
                     </div>
                     
@@ -315,7 +351,7 @@
                         <label for="freebet-odd">Odd da Freebet</label>
                         <div class="input-wrapper">
                             <span><i class="fas fa-percentage"></i></span>
-                            <input type="number" id="freebet-odd" placeholder="Ex: 3.00" value="3.00">
+                            <input type="number" id="freebet-odd" placeholder="Ex: 3.00" value="0">
                         </div>
                     </div>
                     
@@ -325,7 +361,7 @@
                         <label for="protection1-odd">Odd da Proteção 1</label>
                         <div class="input-wrapper">
                             <span><i class="fas fa-percentage"></i></span>
-                            <input type="number" id="protection1-odd" placeholder="Ex: 3.00" value="3.00">
+                            <input type="number" id="protection1-odd" placeholder="Ex: 3.00" value="0">
                         </div>
                     </div>
                     
@@ -333,7 +369,7 @@
                         <label for="protection1-commission">Comissão da Proteção 1 (%)</label>
                         <div class="input-wrapper">
                             <span><i class="fas fa-percent"></i></span>
-                            <input type="number" id="protection1-commission" placeholder="Ex: 4.5" value="4.5">
+                            <input type="number" id="protection1-commission" placeholder="Ex: 4.5" value="0">
                         </div>
                     </div>
                     
@@ -341,7 +377,7 @@
                         <label for="protection2-odd">Odd da Proteção 2</label>
                         <div class="input-wrapper">
                             <span><i class="fas fa-percentage"></i></span>
-                            <input type="number" id="protection2-odd" placeholder="Ex: 3.00" value="3.00">
+                            <input type="number" id="protection2-odd" placeholder="Ex: 3.00" value="0">
                         </div>
                     </div>
                     
@@ -353,9 +389,71 @@
                         </div>
                     </div>
                     
-                    <button id="calculate-btn">
+                    <button id="calculate-freebet-btn">
                         <i class="fas fa-calculator"></i> Calcular Apostas
                     </button>
+                </div>
+                
+                <div id="surebet-tab" style="display: none;">
+                    <div class="input-group">
+                        <label for="surebet-amount">Valor Total (R$)</label>
+                        <div class="input-wrapper">
+                            <span>R$</span>
+                            <input type="number" id="surebet-amount" placeholder="Ex: 100" value="0" readonly>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 1.5rem 0 1rem; color: var(--primary);">Apostas</h3>
+                    
+                    <table id="surebet-odds-table" class="hide-commission">
+                        <thead>
+                            <tr>
+                                <th>Chance</th>
+                                <th>Odd</th>
+                                <th class="commission-column">Comissão</th>
+                                <th>Valor</th>
+                                <th>D</th>
+                                <th>C</th>
+                                <th>Lucro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="surebet-odds-body">
+                            <!-- Odds serão adicionadas dinamicamente aqui -->
+                        </tbody>
+                    </table>
+                    
+                    <button class="add-odd-btn" id="add-odd-btn">
+                        <i class="fas fa-plus"></i> Adicionar Odd
+                    </button>
+                    
+                    <div class="settings">
+                        <h3>Configurações</h3>
+                        
+                        <div class="settings-item">
+                            <input type="checkbox" id="show-commissions">
+                            <label for="show-commissions">Mostrar comissões</label>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <input type="checkbox" id="use-own-exchange">
+                            <label for="use-own-exchange">Use sua própria taxa de câmbio</label>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <label for="rounding">Arredondar aposta até:</label>
+                            <select id="rounding">
+                                <option value="1">1</option>
+                                <option value="0.1">0.1</option>
+                                <option value="0.01">0.01</option>
+                                <option value="0.001">0.001</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <input type="checkbox" id="consider-exchange-rounding">
+                            <label for="consider-exchange-rounding">Levar em consideração as taxas de câmbio ao arredondar</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -366,64 +464,241 @@
                 <span id="last-update" style="color: #9CA3AF; font-size: 0.8rem;"></span>
             </div>
             
-            <div class="result-item">
-                <span class="result-label">Ganho potencial da Freebet:</span>
-                <span class="result-value" id="potential-win">R$ 0.00</span>
+            <div id="freebet-results">
+                <div class="result-item">
+                    <span class="result-label">Ganho potencial da Freebet:</span>
+                    <span class="result-value" id="potential-win">R$ 0.00</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Valor na Proteção 1:</span>
+                    <span class="result-value" id="stake1">R$ 0.00</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Valor na Proteção 2:</span>
+                    <span class="result-value" id="stake2">R$ 0.00</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Total apostado:</span>
+                    <span class="result-value" id="total-stake">R$ 0.00</span>
+                </div>
             </div>
             
-            <div class="result-item">
-                <span class="result-label">Valor na Proteção 1:</span>
-                <span class="result-value" id="stake1">R$ 0.00</span>
-            </div>
-            
-            <div class="result-item">
-                <span class="result-label">Valor na Proteção 2:</span>
-                <span class="result-value" id="stake2">R$ 0.00</span>
-            </div>
-            
-            <div class="result-item">
-                <span class="result-label">Total apostado:</span>
-                <span class="result-value" id="total-stake">R$ 0.00</span>
+            <div id="surebet-results" style="display: none;">
+                <!-- Resultados da Surebet serão adicionados dinamicamente aqui -->
             </div>
             
             <div class="profit" id="profit">
                 Lucro garantido: R$ 0.00
             </div>
             
-            <div class="warning" id="warning" style="display: none; margin: 1rem auto 0 auto; width: fit-content;">
-                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Atenção: Lucro negativo! Ajuste as odds de proteção para valores mais altos.</span>
+            <div class="warning" id="warning" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="warning-text">Atenção: Lucro negativo! Ajuste as odds de proteção para valores mais altos.</span>
             </div>
 
-            <div class="success" id="success" style="display: none; margin: 1rem auto 0 auto; width: fit-content;">
-                 <i class="fas fa-check-circle"></i>
-                 <span>Lucro positivo!</span>
+            <div class="success" id="success" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <span>Lucro positivo!</span>
             </div>
         </div>
     </div>
-    
-    <div class="dark-mode-toggle" id="dark-mode-toggle">
-        <i class="fas fa-moon"></i>
-    </div>
 
     <script>
-        // Dark mode toggle
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
-        darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const icon = darkModeToggle.querySelector('i');
-            if (document.body.classList.contains('dark-mode')) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-            }
+        // Modo de operação (Freebet/Surebet)
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const freebetTab = document.getElementById('freebet-tab');
+        const surebetTab = document.getElementById('surebet-tab');
+        const freebetResults = document.getElementById('freebet-results');
+        const surebetResults = document.getElementById('surebet-results');
+        const calculateFreebetBtn = document.getElementById('calculate-freebet-btn');
+        
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                if (btn.dataset.mode === 'freebet') {
+                    freebetTab.style.display = 'block';
+                    surebetTab.style.display = 'none';
+                    freebetResults.style.display = 'block';
+                    surebetResults.style.display = 'none';
+                    calculateFreebetBtn.style.display = 'flex';
+                } else {
+                    freebetTab.style.display = 'none';
+                    surebetTab.style.display = 'block';
+                    freebetResults.style.display = 'none';
+                    surebetResults.style.display = 'block';
+                    calculateFreebetBtn.style.display = 'none';
+                }
+                
+                calculate();
+            });
         });
         
-        // Calculator logic
-        document.getElementById('calculate-btn').addEventListener('click', function() {
-            // Get input values
+        // Gerenciamento de odds dinâmicas para surebet
+        const surebetOddsBody = document.getElementById('surebet-odds-body');
+        const addOddBtn = document.getElementById('add-odd-btn');
+        const showCommissions = document.getElementById('show-commissions');
+        let oddCount = 2; // Começa com 2 odds
+        let fixedOddIndex = null; // Índice da odd fixa (quando o usuário marca a bolinha)
+        let globalProfit = 0; // Armazena o lucro global para exibir nas linhas
+        
+        // Mostrar/ocultar comissões
+        showCommissions.addEventListener('change', function() {
+            document.getElementById('surebet-odds-table').classList.toggle('hide-commission', !this.checked);
+        });
+        
+        // Inicializa a tabela com 2 odds zeradas
+        function initializeSurebetTable() {
+            surebetOddsBody.innerHTML = '';
+            fixedOddIndex = null;
+            
+            for (let i = 1; i <= oddCount; i++) {
+                addOddRow(i);
+            }
+        }
+        
+        // Adiciona uma nova linha de odd
+        function addOddRow(index) {
+            const row = document.createElement('tr');
+            row.id = `odd-row-${index}`;
+            
+            row.innerHTML = `
+                <td>${index}</td>
+                <td>
+                    <div class="input-wrapper">
+                        <span><i class="fas fa-percentage"></i></span>
+                        <input type="number" id="odd-${index}" value="0" min="1" step="0.01" placeholder="Odd" class="odd-input">
+                    </div>
+                </td>
+                <td class="commission-column">
+                    <div class="input-wrapper">
+                        <span><i class="fas fa-percent"></i></span>
+                        <input type="number" id="commission-${index}" value="0" min="0" max="100" step="0.1" placeholder="Comissão">
+                    </div>
+                </td>
+                <td>
+                    <div class="input-wrapper">
+                        <span>R$</span>
+                        <input type="number" id="stake-${index}" value="0" min="0" step="0.01" placeholder="Valor" class="stake-input">
+                    </div>
+                </td>
+                <td>
+                    <input type="checkbox" id="distribute-${index}" checked class="distribute-checkbox">
+                </td>
+                <td>
+                    <input type="radio" name="fixed-value" id="fixed-${index}" value="${index}" class="fixed-radio">
+                </td>
+                <td id="profit-${index}">0.00</td>
+            `;
+            
+            surebetOddsBody.appendChild(row);
+            
+            // Adiciona eventos de input para cálculo automático
+            const oddInput = document.getElementById(`odd-${index}`);
+            const stakeInput = document.getElementById(`stake-${index}`);
+            const distributeCheckbox = document.getElementById(`distribute-${index}`);
+            const fixedRadio = document.getElementById(`fixed-${index}`);
+            
+            oddInput.addEventListener('input', () => {
+                if (fixedOddIndex === index) {
+                    distributeStakeFromFixed(index);
+                }
+                calculate();
+            });
+            
+            stakeInput.addEventListener('input', () => {
+                if (fixedOddIndex === index) {
+                    distributeStakeFromFixed(index);
+                }
+                calculate();
+            });
+            
+            distributeCheckbox.addEventListener('change', calculate);
+            
+            fixedRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    fixedOddIndex = index;
+                    distributeStakeFromFixed(index);
+                } else if (fixedOddIndex === index) {
+                    fixedOddIndex = null;
+                }
+                calculate();
+            });
+        }
+        
+        // Distribui o valor da aposta fixa para as outras apostas
+        function distributeStakeFromFixed(fixedIndex) {
+            const fixedStake = parseFloat(document.getElementById(`stake-${fixedIndex}`).value) || 0;
+            const fixedOdd = parseFloat(document.getElementById(`odd-${fixedIndex}`).value) || 0;
+            
+            if (fixedStake <= 0 || fixedOdd <= 0) return;
+            
+            // Calcula o valor esperado de retorno
+            const fixedCommission = (parseFloat(document.getElementById(`commission-${fixedIndex}`).value) || 0) / 100;
+            const fixedNetOdd = fixedOdd * (1 - fixedCommission);
+            const expectedReturn = fixedStake * fixedNetOdd;
+            
+            // Calcula os valores para as outras apostas
+            for (let i = 1; i <= oddCount; i++) {
+                if (i !== fixedIndex) {
+                    const odd = parseFloat(document.getElementById(`odd-${i}`).value) || 0;
+                    const commission = (parseFloat(document.getElementById(`commission-${i}`).value) || 0) / 100;
+                    const netOdd = odd * (1 - commission);
+                    
+                    if (netOdd > 0) {
+                        const stake = expectedReturn / netOdd;
+                        document.getElementById(`stake-${i}`).value = stake.toFixed(2);
+                    }
+                }
+            }
+            
+            // Atualiza o valor total
+            updateTotalStake();
+        }
+        
+        // Atualiza o valor total baseado nas apostas individuais
+        function updateTotalStake() {
+            let total = 0;
+            for (let i = 1; i <= oddCount; i++) {
+                total += parseFloat(document.getElementById(`stake-${i}`).value) || 0;
+            }
+            document.getElementById('surebet-amount').value = total.toFixed(2);
+        }
+        
+        // Adiciona uma nova odd
+        addOddBtn.addEventListener('click', function() {
+            if (oddCount >= 6) {
+                alert("Você pode adicionar no máximo 6 odds");
+                return;
+            }
+            
+            oddCount++;
+            addOddRow(oddCount);
+            calculate();
+        });
+        
+        // Função de cálculo principal
+        function calculate() {
+            const activeMode = document.querySelector('.mode-btn.active').dataset.mode;
+            
+            if (activeMode === 'freebet') {
+                calculateFreebet();
+            } else {
+                calculateSurebet();
+            }
+            
+            // Atualiza data/hora
+            const now = new Date();
+            document.getElementById('last-update').textContent = 'Atualizado em: ' + 
+                now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+        }
+        
+        function calculateFreebet() {
+            // Obter valores de entrada
             const F = parseFloat(document.getElementById('freebet-amount').value) || 0;
             const O = parseFloat(document.getElementById('freebet-odd').value) || 0;
             const O1 = parseFloat(document.getElementById('protection1-odd').value) || 0;
@@ -431,58 +706,197 @@
             const O2 = parseFloat(document.getElementById('protection2-odd').value) || 0;
             const C2 = (parseFloat(document.getElementById('protection2-commission').value) || 0) / 100;
             
-            // Validate inputs
-            if (F <= 0 || O <= 0 || O1 <= 0 || O2 <= 0) {
-                alert("Por favor, preencha todos os campos com valores válidos (maiores que zero)");
-                return;
-            }
-            
-            // Calculate potential freebet win
+            // Calcular ganho potencial da freebet
             const ganhoFreebet = F * (O - 1);
             
-            // Calculate net odds (with commission)
+            // Calcular odds líquidas (com comissão)
             const O1_liquida = O1 * (1 - C1);
             const O2_liquida = O2 * (1 - C2);
             
-            // Calculate protection bets
+            // Calcular apostas de proteção
             const S1 = ganhoFreebet / O1_liquida;
             const S2 = ganhoFreebet / O2_liquida;
             
-            // Total stake and profit
+            // Total apostado e lucro
             const totalApostado = S1 + S2;
             const lucro = ganhoFreebet - totalApostado;
             
-            // Display results
+            // Exibir resultados
             document.getElementById('potential-win').textContent = 'R$ ' + ganhoFreebet.toFixed(2);
             document.getElementById('stake1').textContent = 'R$ ' + S1.toFixed(2);
             document.getElementById('stake2').textContent = 'R$ ' + S2.toFixed(2);
             document.getElementById('total-stake').textContent = 'R$ ' + totalApostado.toFixed(2);
             document.getElementById('profit').textContent = 'Lucro garantido: R$ ' + lucro.toFixed(2);
             
-            // Show warning or success message
+            // Mostrar aviso ou mensagem de sucesso
             const warningElement = document.getElementById('warning');
             const successElement = document.getElementById('success');
             
             if (lucro < 0) {
                 warningElement.style.display = 'flex';
+                document.getElementById('warning-text').textContent = 'Atenção: Lucro negativo! Ajuste as odds de proteção para valores mais altos.';
                 successElement.style.display = 'none';
             } else {
                 warningElement.style.display = 'none';
                 successElement.style.display = 'flex';
             }
+        }
+        
+        function calculateSurebet() {
+            // Obter valor total
+            const T = parseFloat(document.getElementById('surebet-amount').value) || 0;
             
-            // Set current date and time
-            const now = new Date();
-            document.getElementById('last-update').textContent = 'Atualizado em: ' + 
-                now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            // Coletar todas as odds e comissões
+            const odds = [];
+            for (let i = 1; i <= oddCount; i++) {
+                const odd = parseFloat(document.getElementById(`odd-${i}`)?.value) || 0;
+                const commission = (parseFloat(document.getElementById(`commission-${i}`)?.value) || 0) / 100;
+                const stake = parseFloat(document.getElementById(`stake-${i}`)?.value) || 0;
+                const distribute = document.getElementById(`distribute-${i}`)?.checked || false;
+                const isFixed = document.getElementById(`fixed-${i}`)?.checked || false;
+                
+                odds.push({
+                    value: odd,
+                    commission: commission,
+                    stake: stake,
+                    netOdd: odd * (1 - commission),
+                    distribute: distribute,
+                    isFixed: isFixed
+                });
+            }
             
-            // Show results with animation
-            document.getElementById('results').style.display = 'block';
-        });
-
-        // Calculate automatically on page load with example values
+            // Se houver uma aposta fixa, calcular com base nela
+            if (fixedOddIndex !== null) {
+                const fixedOdd = odds[fixedOddIndex - 1];
+                if (fixedOdd.stake > 0 && fixedOdd.netOdd > 0) {
+                    const expectedReturn = fixedOdd.stake * fixedOdd.netOdd;
+                    
+                    // Calcular os valores para as outras apostas
+                    for (let i = 0; i < odds.length; i++) {
+                        if (i !== fixedOddIndex - 1 && odds[i].netOdd > 0) {
+                            odds[i].stake = expectedReturn / odds[i].netOdd;
+                            document.getElementById(`stake-${i+1}`).value = odds[i].stake.toFixed(2);
+                        }
+                    }
+                    
+                    // Calcular o valor total
+                    const totalStake = odds.reduce((sum, odd) => sum + odd.stake, 0);
+                    document.getElementById('surebet-amount').value = totalStake.toFixed(2);
+                }
+            }
+            
+            // Calcular arbitrage
+            let arbitrage = 0;
+            odds.forEach(odd => {
+                arbitrage += 1 / odd.netOdd;
+            });
+            
+            // Calcular apostas para cada odd
+            const stakes = [];
+            let totalStake = 0;
+            
+            odds.forEach(odd => {
+                let stakeProduct = 1;
+                odds.forEach(o => {
+                    if (o !== odd) {
+                        stakeProduct *= o.netOdd;
+                    }
+                });
+                
+                const denominator = odds.reduce((sum, o) => {
+                    let product = 1;
+                    odds.forEach(oo => {
+                        if (oo !== o) {
+                            product *= oo.netOdd;
+                        }
+                    });
+                    return sum + product;
+                }, 0);
+                
+                let stake = (T * stakeProduct) / denominator;
+                
+                // Se o usuário especificou um valor, usar esse valor
+                if (odd.stake > 0 && !odd.distribute) {
+                    stake = odd.stake;
+                }
+                
+                stakes.push(stake);
+                totalStake += stake;
+            });
+            
+            // Calcular retorno e lucro
+            const retorno = stakes[0] * odds[0].netOdd;
+            const lucro = retorno - totalStake;
+            const lucroPercentual = (lucro / totalStake) * 100;
+            
+            // Armazena o lucro global para exibir nas linhas
+            globalProfit = lucro;
+            
+            // Atualizar resultados
+            surebetResults.innerHTML = '';
+            
+            stakes.forEach((stake, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <span class="result-label">Valor na Aposta ${index + 1} (${odds[index].value.toFixed(2)}):</span>
+                    <span class="result-value">R$ ${stake.toFixed(2)}</span>
+                `;
+                surebetResults.appendChild(resultItem);
+                
+                // Atualizar lucro individual - agora mostra o lucro global para todas as linhas
+                document.getElementById(`profit-${index + 1}`).textContent = 
+                    globalProfit.toFixed(2);
+            });
+            
+            document.getElementById('profit').textContent = 
+                `Lucro garantido: R$ ${lucro.toFixed(2)} (${lucroPercentual.toFixed(2)}%)`;
+            
+            // Mostrar aviso ou mensagem de sucesso
+            const warningElement = document.getElementById('warning');
+            const successElement = document.getElementById('success');
+            
+            if (arbitrage >= 1) {
+                warningElement.style.display = 'flex';
+                document.getElementById('warning-text').textContent = 
+                    `Atenção: Não é uma surebet! O arbitrage é ${arbitrage.toFixed(4)} (deve ser < 1)`;
+                successElement.style.display = 'none';
+            } else if (lucro < 0) {
+                warningElement.style.display = 'flex';
+                document.getElementById('warning-text').textContent = 
+                    'Atenção: Lucro negativo! Verifique as odds e comissões.';
+                successElement.style.display = 'none';
+            } else {
+                warningElement.style.display = 'none';
+                successElement.style.display = 'flex';
+            }
+        }
+        
+        // Inicializa a tabela quando a página carrega
         window.addEventListener('load', function() {
-            document.getElementById('calculate-btn').click();
+            initializeSurebetTable();
+            
+            // Configurações iniciais
+            document.getElementById('show-commissions').checked = false;
+            document.getElementById('surebet-odds-table').classList.add('hide-commission');
+            
+            // Adiciona eventos de input para cálculo automático
+            document.querySelectorAll('input').forEach(input => {
+                if (input.id !== 'show-commissions' && 
+                    input.id !== 'use-own-exchange' && 
+                    input.id !== 'consider-exchange-rounding') {
+                    input.addEventListener('input', calculate);
+                }
+            });
+            
+            document.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', calculate);
+            });
+            
+            // Evento para o botão de calcular freebet
+            calculateFreebetBtn.addEventListener('click', calculateFreebet);
+            
+            calculate();
         });
     </script>
 </body>
